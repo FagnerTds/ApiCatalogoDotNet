@@ -23,8 +23,15 @@ namespace ApiCatalogo.Controllers
         {
             var categorias = await _context.Categorias.AsNoTracking().ToListAsync();
 
-            if(!categorias.Any())
+            if (!categorias.Any())
                 return NotFound();
+            return Ok(categorias);
+        }
+
+        [HttpGet("produtos")]
+        public async Task<ActionResult<IEnumerable<Categoria>>> ProdutosCategoria()
+        {
+            var categorias = await _context.Categorias.AsNoTracking().Include(c => c.Produtos).ToListAsync();
             return Ok(categorias);
         }
 

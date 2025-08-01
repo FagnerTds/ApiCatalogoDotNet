@@ -1,7 +1,9 @@
 ﻿using ApiCatalogo.Context;
 using ApiCatalogo.Model;
+using ApiCatalogo.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiCatalogo.Controllers
@@ -11,10 +13,21 @@ namespace ApiCatalogo.Controllers
     public class ProdutosController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public ProdutosController(AppDbContext appDbContext)
+        public ProdutosController(AppDbContext appDbContext, IConfiguration configuration)
         {
             _context = appDbContext;
+            _configuration = configuration;
+        }
+
+        [HttpGet("configuration")]
+        public ActionResult<string> Get()
+        {
+            var valor1 = _configuration["chave"];
+            var valor2 = _configuration["chave2"];
+            var secao = _configuration["secao:chave2"];
+            return $"Valor1 = {valor1} \n Valor2 = {valor2} \n Seção: chave2 => {secao}";
         }
 
         [HttpGet]

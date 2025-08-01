@@ -1,4 +1,5 @@
 ﻿using ApiCatalogo.Context;
+using ApiCatalogo.Filters;
 using ApiCatalogo.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,20 +13,19 @@ namespace ApiCatalogo.Controllers
     public class CategoriaController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ILogger _logger;
 
-        public CategoriaController(AppDbContext context)
+        public CategoriaController(AppDbContext context, ILogger logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet]
+        [ServiceFilter(typeof(ApiLoggingFilter))]
         public async Task<ActionResult<IEnumerable<Categoria>>> GetAll()
         {
-            var categorias = await _context.Categorias.AsNoTracking().ToListAsync();
-
-            if (!categorias.Any())
-                return NotFound();
-            return Ok(categorias);
+            return await _context.Categorias.AsNoTracking().ToListAsync();
         }
 
         [HttpGet("produtos")]
@@ -36,12 +36,18 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet("{id}", Name = "ObterCategoria")]
+        [ServiceFilter(typeof(ApiLoggingFilter))]
+
         public async Task<ActionResult<Categoria>> GetById(int id)
         {
+
             var categoria = await _context.Categorias.FirstOrDefaultAsync(c => c.CategoriaId == id);
 
             if (categoria is null)
-                return NotFound("Categoria não encontrada");
+            {
+                _logger.LogWarning($"Categoria com id= {id} não encontrada...");
+                return NotFound($"Categoria com id= {id} não encontrada...");
+            }
 
             return Ok(categoria);
         }
@@ -50,8 +56,10 @@ namespace ApiCatalogo.Controllers
         public async Task<ActionResult<Categoria>> Post(Categoria categoria)
         {
             if(categoria is null)
-                return BadRequest();
-
+            {
+                _logger.LogWarning($"Dados inválidos...");
+                return BadRequest("Dados inválidos");
+            }
             _context.Categorias.Add(categoria);
             await _context.SaveChangesAsync();
 
@@ -63,7 +71,10 @@ namespace ApiCatalogo.Controllers
         public async Task<ActionResult> Put(Categoria categoria, int id)
         {
             if (id != categoria.CategoriaId)
-                return BadRequest();
+            {
+                _logger.LogWarning($"Dados inválidos...");
+                return BadRequest("Dados inválidos");
+            }
 
             _context.Entry(categoria).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -77,7 +88,10 @@ namespace ApiCatalogo.Controllers
             var categoria = await _context.Categorias.FindAsync(id);
 
             if (categoria is null)
-                return NotFound("Categoria não encontrada");
+            {
+                _logger.LogWarning($"Categoria com id={id} não encontrada...");
+                return NotFound($"Categoria com id={id} não encontrada...");
+            }
 
             _context.Remove(categoria);
             await _context.SaveChangesAsync();

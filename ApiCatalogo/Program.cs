@@ -1,6 +1,7 @@
 using ApiCatalogo.Context;
 using ApiCatalogo.Extentions;
 using ApiCatalogo.Filters;
+using ApiCatalogo.Repositories;
 using ApiCatalogo.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -9,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers(options => options.Filters.Add(typeof(ApiExceptionFilter)))
+builder.Services.AddControllers(/*options => options.Filters.Add(typeof(ApiExceptionFilter))*/)
     .AddJsonOptions(options => 
         options
         .JsonSerializerOptions
@@ -26,7 +27,7 @@ options.UseMySql(mySqlConnection,
 ServerVersion.AutoDetect(mySqlConnection)));
 
 builder.Services.AddScoped<ApiLoggingFilter>();
-builder.Services.AddTransient<IMeuServico, MeuServico>();
+builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 
 var app = builder.Build();
 

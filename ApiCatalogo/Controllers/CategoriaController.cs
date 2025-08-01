@@ -1,6 +1,7 @@
 ﻿using ApiCatalogo.Context;
 using ApiCatalogo.Filters;
 using ApiCatalogo.Model;
+using ApiCatalogo.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,36 +13,34 @@ namespace ApiCatalogo.Controllers
     [ApiController]
     public class CategoriaController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ICategoriaRepository _repository;
         private readonly ILogger _logger;
 
-        public CategoriaController(AppDbContext context, ILogger logger)
+        public CategoriaController(ILogger<CategoriaController> logger, ICategoriaRepository repository)
         {
-            _context = context;
             _logger = logger;
+            _repository = repository;
         }
 
         [HttpGet]
-        [ServiceFilter(typeof(ApiLoggingFilter))]
-        public async Task<ActionResult<IEnumerable<Categoria>>> GetAll()
+        public ActionResult<IEnumerable<Categoria>> GetAll()
         {
-            return await _context.Categorias.AsNoTracking().ToListAsync();
-        }
-
-        [HttpGet("produtos")]
-        public async Task<ActionResult<IEnumerable<Categoria>>> ProdutosCategoria()
-        {
-            var categorias = await _context.Categorias.AsNoTracking().Include(c => c.Produtos).ToListAsync();
+            var categorias = _repository.GetCategorias();
             return Ok(categorias);
         }
 
-        [HttpGet("{id}", Name = "ObterCategoria")]
-        [ServiceFilter(typeof(ApiLoggingFilter))]
+        //[HttpGet("produtos")]
+        //public async Task<ActionResult<IEnumerable<Categoria>>> ProdutosCategoria()
+        //{
+        //    var categorias = await _repository.GetCategoria(id);
+        //    return Ok(categorias);
+        //}
 
-        public async Task<ActionResult<Categoria>> GetById(int id)
+        [HttpGet("{id}", Name = "ObterCategoria")]
+        public ActionResult<Categoria> GetById(int id)
         {
 
-            var categoria = await _context.Categorias.FirstOrDefaultAsync(c => c.CategoriaId == id);
+            var categoria = _repository.GetCategoria(id);
 
             if (categoria is null)
             {
@@ -53,18 +52,17 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Categoria>> Post(Categoria categoria)
+        public ActionResult<Categoria> Post(Categoria categoria)
         {
-            if(categoria is null)
+            if (categoria is null)
             {
                 _logger.LogWarning($"Dados inválidos...");
                 return BadRequest("Dados inválidos");
             }
-            _context.Categorias.Add(categoria);
-            await _context.SaveChangesAsync();
+            var categoriaCriada = _repository.Create(categoria);
 
             return new CreatedAtRouteResult("ObterCategoria",
-                new { id = categoria.CategoriaId }, categoria);
+                new { id = categoria.CategoriaId }, categoriaCriada);
         }
 
         [HttpPut("{id}")]
@@ -76,16 +74,15 @@ namespace ApiCatalogo.Controllers
                 return BadRequest("Dados inválidos");
             }
 
-            _context.Entry(categoria).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            var categoriaAtualizada = _repository.Update(categoria);
 
-            return Ok(categoria);
+            return Ok(categoriaAtualizada);
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteProduto(int id)
+        public ActionResult DeleteProduto(int id)
         {
-            var categoria = await _context.Categorias.FindAsync(id);
+            var categoria = _repository.GetCategoria(id);
 
             if (categoria is null)
             {
@@ -93,8 +90,7 @@ namespace ApiCatalogo.Controllers
                 return NotFound($"Categoria com id={id} não encontrada...");
             }
 
-            _context.Remove(categoria);
-            await _context.SaveChangesAsync();
+            _repository.Delete(id);
 
             return NoContent();
         }

@@ -62,7 +62,7 @@ namespace ApiCatalogo.Controllers
             var categoriaCriada = _repository.Create(categoria);
 
             return new CreatedAtRouteResult("ObterCategoria",
-                new { id = categoria.CategoriaId }, categoriaCriada);
+                new { id = categoriaCriada.CategoriaId }, categoriaCriada);
         }
 
         [HttpPut("{id}")]

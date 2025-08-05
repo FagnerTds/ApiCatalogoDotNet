@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers(/*options => options.Filters.Add(typeof(ApiExceptionFilter))*/)
+builder.Services.AddControllers(options => options.Filters.Add(typeof(ApiExceptionFilter)))
     .AddJsonOptions(options => 
         options
         .JsonSerializerOptions
@@ -28,6 +28,7 @@ ServerVersion.AutoDetect(mySqlConnection)));
 
 builder.Services.AddScoped<ApiLoggingFilter>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
+builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 
 var app = builder.Build();
 

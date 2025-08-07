@@ -13,17 +13,17 @@ namespace ApiCatalogo.Controllers
     [ApiController]
     public class ProdutosController : ControllerBase
     {
-        private readonly IProdutoRepository _repository;
+        private readonly IUnitOfWork _uow;
 
-        public ProdutosController(IProdutoRepository repository)
+        public ProdutosController(IUnitOfWork uow)
         {
-            _repository = repository;
+            _uow = uow;
         }
 
         [HttpGet]
-        public ActionResult<IQueryable<Produto>> GetProdutos()
+        public ActionResult<IEnumerable<Produto>> GetProdutos()
         {
-            var produtos = _repository.GetProdutos().ToList();
+            var produtos = _uow.ProdutoRepository.GetAll();
 
             if (!produtos.Any())
                 return NotFound("Produtos não encontrados");
@@ -31,10 +31,20 @@ namespace ApiCatalogo.Controllers
             return Ok(produtos);
         }
 
+        [HttpGet("porCategoria/{id}")]
+        public ActionResult<IEnumerable<Produto>> GetProdutosByCategoria(int id)
+        {
+            var produtos = _uow.ProdutoRepository.GetProdutos(id);
+
+            if (produtos is null || !produtos.Any())
+                return NotFound($"produtos da categiria com id {id}, não encontrado");
+            return Ok(produtos);
+        }
+
         [HttpGet("{id}", Name = "ObterProduto")]
         public ActionResult<Produto> GetById(int id)
         {
-            var produto = _repository.GetProduto(id);
+            var produto = _uow.ProdutoRepository.Get(p => p.ProdutoId == id);
 
             if (produto is null)
                 return NotFound("Produto não encontrado");
@@ -46,7 +56,8 @@ namespace ApiCatalogo.Controllers
         {
             if (produto is null)
                 return BadRequest();
-            var produtoCriado = _repository.CreateProduto(produto);
+            var produtoCriado = _uow.ProdutoRepository.Create(produto);
+            _uow.Commit();
             return new CreatedAtRouteResult("ObterProduto",
                 new { id = produtoCriado.ProdutoId }, produtoCriado);
         }
@@ -56,20 +67,21 @@ namespace ApiCatalogo.Controllers
         {
             if (id != produto.ProdutoId)
                 return BadRequest();
-            var atualizado =_repository.UpdateProduto(produto);
-            if(atualizado)
-                return Ok(produto);
-            return StatusCode(500, $"falha ao atualizar o produto de id = {id}"); 
+            var atualizado = _uow.ProdutoRepository.Update(produto);
+            _uow.Commit();
+            return Ok(atualizado);
         }
 
         [HttpDelete("{id}")]
         public ActionResult DeleteProduto(int id)
         {
-            var deletado = _repository.DeleteProduto(id);
-            if (deletado)
-                return NoContent();
-            return StatusCode(500, $"falha ao Excluuir o produto de id = {id}");
-
+            var produto = _uow.ProdutoRepository.Get(p => p.ProdutoId == id);
+            if (produto is null)
+               return NotFound($"Categoria com id={id} não encontrada...");
+            
+            _uow.ProdutoRepository.Delete(produto);
+            _uow.Commit();
+            return NoContent();
         }
 
     }

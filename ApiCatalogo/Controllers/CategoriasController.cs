@@ -1,4 +1,5 @@
 ﻿using ApiCatalogo.Context;
+using ApiCatalogo.DTO;
 using ApiCatalogo.Filters;
 using ApiCatalogo.Model;
 using ApiCatalogo.Repositories;
@@ -23,10 +24,23 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Categoria>> GetAll()
+        public ActionResult<IEnumerable<CategoriaDTO>> GetAll()
         {
             var categorias = _uof.CategoriaRepository.GetAll();
-            return Ok(categorias);
+
+            var categoriasDto = new List<CategoriaDTO>();
+
+            foreach (var categoria in categorias)
+            {
+                var categoriaDto = new CategoriaDTO()
+                {
+                    CategoriaId = categoria.CategoriaId,
+                    Nome = categoria.Nome,
+                    ImagemUrl = categoria.ImagemUrl
+                };
+                categoriasDto.Add(categoriaDto);
+            }
+            return Ok(categoriasDto);
         }
 
         //[HttpGet("produtos")]
@@ -37,7 +51,7 @@ namespace ApiCatalogo.Controllers
         //}
 
         [HttpGet("{id}", Name = "ObterCategoria")]
-        public ActionResult<Categoria> GetById(int id)
+        public ActionResult<CategoriaDTO> GetById(int id)
         {
 
             var categoria = _uof.CategoriaRepository.Get(c => c.CategoriaId == id);
@@ -47,38 +61,70 @@ namespace ApiCatalogo.Controllers
                 _logger.LogWarning($"Categoria com id= {id} não encontrada...");
                 return NotFound($"Categoria com id= {id} não encontrada...");
             }
+            var categoriaDto = new CategoriaDTO()
+            {
+                CategoriaId = categoria.CategoriaId,
+                Nome = categoria.Nome,
+                ImagemUrl = categoria.ImagemUrl
+            };
 
-            return Ok(categoria);
+            return Ok(categoriaDto);
         }
 
         [HttpPost]
-        public ActionResult<Categoria> Post(Categoria categoria)
+        public ActionResult<CategoriaDTO> Post(CategoriaDTO categoriaDto)
         {
-            if (categoria is null)
+            if (categoriaDto is null)
             {
                 _logger.LogWarning($"Dados inválidos...");
                 return BadRequest("Dados inválidos");
             }
+            var categoria = new Categoria()
+            {
+                CategoriaId = categoriaDto.CategoriaId,
+                Nome = categoriaDto.Nome,
+                ImagemUrl = categoriaDto.ImagemUrl
+            };
             var categoriaCriada = _uof.CategoriaRepository.Create(categoria);
             _uof.Commit();
 
+            var novaCategoriaDto = new CategoriaDTO()
+            {
+                CategoriaId = categoriaCriada.CategoriaId,
+                Nome = categoriaCriada.Nome,
+                ImagemUrl = categoriaCriada.ImagemUrl
+            };
             return new CreatedAtRouteResult("ObterCategoria",
                 new { id = categoriaCriada.CategoriaId }, categoriaCriada);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> Put(Categoria categoria, int id)
+        public ActionResult<CategoriaDTO> Put(CategoriaDTO categoriaDto, int id)
         {
-            if (id != categoria.CategoriaId)
+            if (id != categoriaDto.CategoriaId)
             {
                 _logger.LogWarning($"Dados inválidos...");
                 return BadRequest("Dados inválidos");
             }
 
+            var categoria = new Categoria()
+            {
+                CategoriaId = categoriaDto.CategoriaId,
+                Nome = categoriaDto.Nome,
+                ImagemUrl = categoriaDto.ImagemUrl
+            };
+
             var categoriaAtualizada = _uof.CategoriaRepository.Update(categoria);
             _uof.Commit();
 
-            return Ok(categoriaAtualizada);
+            var novaCategoriaDto = new CategoriaDTO()
+            {
+                CategoriaId = categoriaAtualizada.CategoriaId,
+                Nome = categoriaAtualizada.Nome,
+                ImagemUrl = categoriaAtualizada.ImagemUrl
+            };
+
+            return Ok(novaCategoriaDto);
         }
 
         [HttpDelete("{id}")]

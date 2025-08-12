@@ -29,7 +29,7 @@ public static class CategoriaDTOMappingExtensions
         };
     }
 
-    public static IEnumerable<CategoriaDTO> toListCategoriaDto(this IEnumerable<Categoria> categoria)
+    public static IEnumerable<CategoriaDTO> ToListCategoriaDto(this IEnumerable<Categoria> categoria)
     {
         if (!categoria.Any() || categoria is null)
             return new List<CategoriaDTO>();

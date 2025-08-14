@@ -14,9 +14,9 @@ namespace ApiCatalogo.Repositories
         }
 
         
-        public IEnumerable<T> GetAll()
+        public IQueryable<T> GetAll()
         {
-            return _context.Set<T>().AsNoTracking().ToList();
+            return _context.Set<T>().AsNoTracking();
         }       
 
         public T? Get(Expression<Func<T, bool>> predicate)

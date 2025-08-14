@@ -1,9 +1,10 @@
 ﻿using ApiCatalogo.Model;
+using ApiCatalogo.Pagination;
 
-namespace ApiCatalogo.Repositories
+namespace ApiCatalogo.Repositories;
+
+public interface IProdutoRepository: IRepository<Produto>
 {
-    public interface IProdutoRepository: IRepository<Produto>
-    {
-        IEnumerable<Produto> GetProdutos(int id);
-    }
+    PagedList<Produto> GetProdutosPagination(ProdutosParameters produtosParameters);
+    IEnumerable<Produto> GetProdutos(int id);
 }

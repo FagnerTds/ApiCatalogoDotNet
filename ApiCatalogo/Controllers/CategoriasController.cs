@@ -3,10 +3,12 @@ using ApiCatalogo.DTO;
 using ApiCatalogo.DTO.Mappings;
 using ApiCatalogo.Filters;
 using ApiCatalogo.Model;
+using ApiCatalogo.Pagination;
 using ApiCatalogo.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 
 namespace ApiCatalogo.Controllers
@@ -29,6 +31,24 @@ namespace ApiCatalogo.Controllers
         {
             var categorias = _uof.CategoriaRepository.GetAll();
 
+            var categoriasDto = categorias.ToListCategoriaDto();
+            return Ok(categoriasDto);
+        }
+
+        [HttpGet("pagination")]
+        public ActionResult<IEnumerable<CategoriaDTO>> GetAllParameters([FromQuery] CategoriasParameters categoriasParameters)
+        {
+            var categorias = _uof.CategoriaRepository.GetParameters(categoriasParameters);
+            var metadata = new
+            {
+                categorias.TotalCount,
+                categorias.PageSize,
+                categorias.CurrentPage,
+                categorias.TotalPages,
+                categorias.HasNext,
+                categorias.HasPrevious
+            };
+            Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
             var categoriasDto = categorias.ToListCategoriaDto();
             return Ok(categoriasDto);
         }

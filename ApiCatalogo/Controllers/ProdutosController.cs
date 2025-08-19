@@ -26,18 +26,18 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet("pagination")]
-        public ActionResult<IEnumerable<ProdutoDTO>> GetPagination([FromQuery]ProdutosParameters produtosParam)
+        public async Task<ActionResult<IEnumerable<ProdutoDTO>>> GetPagination([FromQuery]ProdutosParameters produtosParam)
         {
-            var produtos = _uow.ProdutoRepository.GetProdutosPagination(produtosParam);
+            var produtos = await _uow.ProdutoRepository.GetProdutosPaginationAsync(produtosParam);
 
             return ObterProdutos(produtos);
 
         }
 
         [HttpGet("filter/preco/pagination")]
-        public ActionResult<IEnumerable<ProdutoDTO>> GetProdutosFilterPreco([FromQuery]ProdutoFiltroPreco produtoFiltroPreco)
+        public async Task<ActionResult<IEnumerable<ProdutoDTO>>> GetProdutosFilterPreco([FromQuery]ProdutoFiltroPreco produtoFiltroPreco)
         {
-            var produtos = _uow.ProdutoRepository.GetProdutosFiltroPreco(produtoFiltroPreco);
+            var produtos = await _uow.ProdutoRepository.GetProdutosFiltroPrecoAsync(produtoFiltroPreco);
             return ObterProdutos(produtos);
         }
 
@@ -60,9 +60,9 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<ProdutoDTO>> GetProdutos()
+        public async Task<ActionResult<IEnumerable<ProdutoDTO>>> GetProdutos()
         {
-            var produtos = _uow.ProdutoRepository.GetAll();
+            var produtos = await _uow.ProdutoRepository.GetAll().ToListAsync();
 
             if (!produtos.Any())
                 return NotFound("Produtos não encontrados");
@@ -72,9 +72,9 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet("porCategoria/{id}")]
-        public ActionResult<IEnumerable<ProdutoDTO>> GetProdutosByCategoria(int id)
+        public async Task<ActionResult<IEnumerable<ProdutoDTO>>> GetProdutosByCategoria(int id)
         {
-            var produtos = _uow.ProdutoRepository.GetProdutos(id);
+            var produtos = await _uow.ProdutoRepository.GetProdutosAsync(id);
 
             if (produtos is null || !produtos.Any())
                 return NotFound($"produtos da categiria com id {id}, não encontrado");
@@ -83,9 +83,9 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet("{id}", Name = "ObterProduto")]
-        public ActionResult<ProdutoDTO> GetById(int id)
+        public async Task<ActionResult<ProdutoDTO>> GetById(int id)
         {
-            var produto = _uow.ProdutoRepository.Get(p => p.ProdutoId == id);
+            var produto = await _uow.ProdutoRepository.Get(p => p.ProdutoId == id);
 
             if (produto is null)
                 return NotFound("Produto não encontrado");
@@ -94,14 +94,14 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpPost]
-        public ActionResult<ProdutoDTO> Post(ProdutoDTO produtoDto)
+        public async Task<ActionResult<ProdutoDTO>> Post(ProdutoDTO produtoDto)
         {
             if (produtoDto is null)
                 return BadRequest();
             var produto = _mapper.Map<Produto>(produtoDto);
 
             var produtoCriado = _uow.ProdutoRepository.Create(produto);
-            _uow.Commit();
+            await _uow.CommitAsync();
 
             var novoProdutoDto = _mapper.Map<ProdutoDTO>(produtoCriado);
 
@@ -110,12 +110,12 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpPatch("{id}/UpdatePartial")]
-        public ActionResult<ProdutoDTOUpdateResponse> Patch(int id, JsonPatchDocument<ProdutoDTOUpdateRequest> patchProdutoDTO)
+        public async Task<ActionResult<ProdutoDTOUpdateResponse>> Patch(int id, JsonPatchDocument<ProdutoDTOUpdateRequest> patchProdutoDTO)
         {
             if (patchProdutoDTO is null || id <= 0)
                 return BadRequest();
 
-            var produto = _uow.ProdutoRepository.Get(c => c.ProdutoId == id);
+            var produto = await _uow.ProdutoRepository.Get(c => c.ProdutoId == id);
             if (produto is null)
                 return NotFound();
 
@@ -127,7 +127,7 @@ namespace ApiCatalogo.Controllers
             _mapper.Map(produtoUpdateRequest, produto);
 
             _uow.ProdutoRepository.Update(produto);
-            _uow.Commit();
+            await _uow.CommitAsync();
 
             return Ok(_mapper.Map<ProdutoDTOUpdateResponse>(produto));
 
@@ -135,7 +135,7 @@ namespace ApiCatalogo.Controllers
             
 
         [HttpPut("{id}")]
-        public ActionResult<ProdutoDTO> PutProduto(ProdutoDTO produtoDto, int id)
+        public async Task<ActionResult<ProdutoDTO>> PutProduto(ProdutoDTO produtoDto, int id)
         {
             if (id != produtoDto.ProdutoId)
                 return BadRequest();
@@ -143,21 +143,21 @@ namespace ApiCatalogo.Controllers
             var produto = _mapper.Map<Produto>(produtoDto);
 
             var atualizado = _uow.ProdutoRepository.Update(produto);
-            _uow.Commit();
+            await _uow.CommitAsync();
             
             var novoProdutoDto =_mapper.Map<ProdutoDTO>(atualizado);
             return Ok(novoProdutoDto);
         }
 
         [HttpDelete("{id}")]
-        public ActionResult DeleteProduto(int id)
+        public async Task<ActionResult> DeleteProduto(int id)
         {
-            var produto = _uow.ProdutoRepository.Get(p => p.ProdutoId == id);
+            var produto = await _uow.ProdutoRepository.Get(p => p.ProdutoId == id);
             if (produto is null)
                return NotFound($"Categoria com id={id} não encontrada...");
             
             _uow.ProdutoRepository.Delete(produto);
-            _uow.Commit();
+            await _uow.CommitAsync();
             return NoContent();
         }
 

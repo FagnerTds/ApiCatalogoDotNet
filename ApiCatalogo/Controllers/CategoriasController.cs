@@ -27,7 +27,7 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<CategoriaDTO>> GetAll()
+        public async Task<ActionResult<IEnumerable<CategoriaDTO>>> GetAll()
         {
             var categorias = _uof.CategoriaRepository.GetAll();
 
@@ -36,9 +36,9 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet("pagination")]
-        public ActionResult<IEnumerable<CategoriaDTO>> GetAllParameters([FromQuery] CategoriasParameters categoriasParameters)
+        public async Task<ActionResult<IEnumerable<CategoriaDTO>>> GetAllParameters([FromQuery] CategoriasParameters categoriasParameters)
         {
-            var categorias = _uof.CategoriaRepository.GetParameters(categoriasParameters);
+            var categorias = await _uof.CategoriaRepository.GetParametersAsync(categoriasParameters);
             return ObterFIltroCategoria(categorias);
         }
 
@@ -59,19 +59,19 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet("filter/nome/pagination")]
-        public ActionResult<IEnumerable<CategoriaDTO>> GetCategoriaFiltroNome(
+        public async Task<ActionResult<IEnumerable<CategoriaDTO>>> GetCategoriaFiltroNome(
                                                     [FromQuery] CategoriaFiltroNome categoriaFiltro)
         {
-            var categorias = _uof.CategoriaRepository.GetCategoriasFiltroNome(categoriaFiltro);
+            var categorias = await _uof.CategoriaRepository.GetCategoriasFiltroNomeAsync(categoriaFiltro);
             return ObterFIltroCategoria(categorias);
             
         }
 
         [HttpGet("{id}", Name = "ObterCategoria")]
-        public ActionResult<CategoriaDTO> GetById(int id)
+        public async Task<ActionResult<CategoriaDTO>> GetById(int id)
         {
 
-            var categoria = _uof.CategoriaRepository.Get(c => c.CategoriaId == id);
+            var categoria = await _uof.CategoriaRepository.Get(c => c.CategoriaId == id);
 
             if (categoria is null)
             {
@@ -84,7 +84,7 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpPost]
-        public ActionResult<CategoriaDTO> Post(CategoriaDTO categoriaDto)
+        public async Task<ActionResult<CategoriaDTO>> Post(CategoriaDTO categoriaDto)
         {
             if (categoriaDto is null)
             {
@@ -93,7 +93,7 @@ namespace ApiCatalogo.Controllers
             }
             var categoria = categoriaDto.ToCategoria();
             var categoriaCriada = _uof.CategoriaRepository.Create(categoria);
-            _uof.Commit();
+            await _uof.CommitAsync();
 
             var novaCategoriaDto = categoriaCriada.ToCategoriaDto();
             return new CreatedAtRouteResult("ObterCategoria",
@@ -101,7 +101,7 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpPut("{id}")]
-        public ActionResult<CategoriaDTO> Put(CategoriaDTO categoriaDto, int id)
+        public async Task<ActionResult<CategoriaDTO>> Put(CategoriaDTO categoriaDto, int id)
         {
             if (id != categoriaDto.CategoriaId)
             {
@@ -112,7 +112,7 @@ namespace ApiCatalogo.Controllers
             var categoria = categoriaDto.ToCategoria();
 
             var categoriaAtualizada = _uof.CategoriaRepository.Update(categoria);
-            _uof.Commit();
+            await _uof.CommitAsync();
 
             var novaCategoriaDto = categoriaAtualizada.ToCategoriaDto();
 
@@ -120,9 +120,9 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpDelete("{id}")]
-        public ActionResult DeleteProduto(int id)
+        public async Task<ActionResult> DeleteProduto(int id)
         {
-            var categoria = _uof.CategoriaRepository.Get(c => c.CategoriaId == id);
+            var categoria = await _uof.CategoriaRepository.Get(c => c.CategoriaId == id);
 
             if (categoria is null)
             {
@@ -131,8 +131,7 @@ namespace ApiCatalogo.Controllers
             }
 
             _uof.CategoriaRepository.Delete(categoria);
-            _uof.Commit();
-
+            await _uof.CommitAsync();
 
             return NoContent();
         }

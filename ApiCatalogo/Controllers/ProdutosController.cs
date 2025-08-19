@@ -30,6 +30,19 @@ namespace ApiCatalogo.Controllers
         {
             var produtos = _uow.ProdutoRepository.GetProdutosPagination(produtosParam);
 
+            return ObterProdutos(produtos);
+
+        }
+
+        [HttpGet("filter/preco/pagination")]
+        public ActionResult<IEnumerable<ProdutoDTO>> GetProdutosFilterPreco([FromQuery]ProdutoFiltroPreco produtoFiltroPreco)
+        {
+            var produtos = _uow.ProdutoRepository.GetProdutosFiltroPreco(produtoFiltroPreco);
+            return ObterProdutos(produtos);
+        }
+
+        private ActionResult<IEnumerable<ProdutoDTO>> ObterProdutos(PagedList<Produto> produtos)
+        {
             var metadata = new
             {
                 produtos.TotalCount,

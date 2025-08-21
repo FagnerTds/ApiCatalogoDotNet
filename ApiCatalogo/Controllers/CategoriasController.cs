@@ -5,6 +5,7 @@ using ApiCatalogo.Filters;
 using ApiCatalogo.Model;
 using ApiCatalogo.Pagination;
 using ApiCatalogo.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,7 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<CategoriaDTO>>> GetAll()
         {
             var categorias = _uof.CategoriaRepository.GetAll();

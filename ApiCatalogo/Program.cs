@@ -1,4 +1,4 @@
-using ApiCatalogo.Context;
+﻿using ApiCatalogo.Context;
 using ApiCatalogo.DTO.Mappings;
 using ApiCatalogo.Extentions;
 using ApiCatalogo.Filters;
@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -28,7 +29,43 @@ builder.Services.AddControllers(options =>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+//Adicionar Bearer Token
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "apiCatalogo",
+        Version = "v1"
+    });
+
+    // 🔑 Configuração para suportar JWT Bearer no Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insira o token JWT desta forma: Bearer {seu token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 
 //Identity Configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -36,7 +73,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddAuthorization();
-builder.Services.AddAuthentication("Bearer").AddJwtBearer();
 
 //sql configuration
 var mySqlConnection = builder.Configuration.GetConnectionString("MinhaConexao");
@@ -76,7 +112,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ClockSkew = TimeSpan.Zero,
         ValidAudience = builder.Configuration["JWT:ValidAudience"],
-        ValidIssuer = builder.Configuration["JWT: ValidIssuer"],
+        ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
     };
 

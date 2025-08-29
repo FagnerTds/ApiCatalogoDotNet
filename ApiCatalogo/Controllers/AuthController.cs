@@ -1,6 +1,7 @@
 ﻿using ApiCatalogo.DTO;
 using ApiCatalogo.Model;
 using ApiCatalogo.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -104,7 +105,7 @@ public class AuthController : ControllerBase
 
     [HttpPost]
     [Route("Refresh-token")]
-    public async Task<IActionResult> RefreshToke(TokenModel tokenModel)
+    public async Task<IActionResult> RefreshToken([FromBody] TokenModel tokenModel)
     {
         if (tokenModel is null)
         {
@@ -148,5 +149,21 @@ public class AuthController : ControllerBase
         });
 
     }
+
+    [Authorize]
+    [HttpPost]
+    [Route("revoke/{username}")]
+    public async Task<IActionResult> Revoke(string username)
+    {
+        var user = await _userManager.FindByNameAsync(username);
+
+        if (user == null)
+            return BadRequest("Ivalid User name");
+        user.RefreshToken = null;
+        await _userManager.UpdateAsync(user);
+
+        return NoContent();
+    }
+
 
 }

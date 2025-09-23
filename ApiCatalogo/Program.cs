@@ -73,7 +73,21 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddAuthorization();
+//Cadastro das politicas de acesso
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    
+    options.AddPolicy("SuperAdminOnly", policy => 
+        policy.RequireRole("Admin").RequireClaim("id", "Fagner"));
+
+    options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
+
+    options.AddPolicy("ExclusiveOnly", policy =>
+        policy.RequireAssertion(context =>
+        context.User.HasClaim(claim => claim.Type == "id" && claim.Value == "fagner")
+        || context.User.IsInRole("SuperAdmin")));
+});
 
 //sql configuration
 var mySqlConnection = builder.Configuration.GetConnectionString("MinhaConexao");

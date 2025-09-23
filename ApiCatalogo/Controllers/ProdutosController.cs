@@ -4,6 +4,7 @@ using ApiCatalogo.Model;
 using ApiCatalogo.Pagination;
 using ApiCatalogo.Repositories;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -59,6 +60,7 @@ namespace ApiCatalogo.Controllers
             return Ok(produtosDto);
         }
 
+        [Authorize(Policy = "UserOnly")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProdutoDTO>>> GetProdutos()
         {

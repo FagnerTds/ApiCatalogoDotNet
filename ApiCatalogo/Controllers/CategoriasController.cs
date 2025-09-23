@@ -27,8 +27,8 @@ namespace ApiCatalogo.Controllers
             _uof = uof;
         }
 
-        [HttpGet]
         [Authorize]
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<CategoriaDTO>>> GetAll()
         {
             var categorias = _uof.CategoriaRepository.GetAll();
@@ -122,6 +122,7 @@ namespace ApiCatalogo.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult> DeleteProduto(int id)
         {
             var categoria = await _uof.CategoriaRepository.Get(c => c.CategoriaId == id);
